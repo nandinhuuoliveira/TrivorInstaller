@@ -7,20 +7,9 @@
       "WingetId": "7zip.7zip"
     },
     {
-      "Id": "openvpn",
-      "Name": "OpenVPN",
-      "Detection": {
-        "Method": "Registry",
-        "DisplayName": "OpenVPN"
-      }
-    },
-    {
       "Id": "firefox",
       "Name": "Mozilla Firefox",
-      "Detection": {
-        "Method": "Exe",
-        "Path": "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
-      }
+      "WingetId": "Mozilla.Firefox"
     },
     {
       "Id": "chrome",
