@@ -33,7 +33,18 @@ function Get-ClientConfigByName {
         return $null
     }
 
-    return Get-Content $file -Raw | ConvertFrom-Json
+    try {
+        $content = Get-Content $file -Raw -Encoding UTF8
+        return $content | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        Write-Host ""
+        Write-Host "[ERROR] Falha ao ler JSON do cliente ${ClientName}:" -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-Host "Arquivo: $file" -ForegroundColor Yellow
+        Write-Host ""
+        Wait-Enter
+        return $null
+    }
 }
 
 function Show-ClientSubMenu {
