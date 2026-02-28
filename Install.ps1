@@ -2,6 +2,19 @@ Write-Host "Trivor Installer iniciado"
 
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
+# --- Cleanup on exit ---
+$global:TrivorBasePath = Join-Path $env:TEMP "TrivorInstaller"
+
+function Invoke-Cleanup {
+    try {
+        if (Test-Path $global:TrivorBasePath) {
+            Remove-Item $global:TrivorBasePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+}
+
+Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action { Invoke-Cleanup } | Out-Null
+
 $BasePath    = Join-Path $env:TEMP "TrivorInstaller"
 $CorePath    = Join-Path $BasePath "core"
 $ClientsPath = Join-Path $BasePath "Clientes"

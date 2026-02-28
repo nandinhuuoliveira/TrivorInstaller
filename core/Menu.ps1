@@ -111,7 +111,10 @@ function Start-MainMenu {
 
         $choice = Read-Host "Digite o numero"
 
-        if ($choice -eq "0") { return }
+        if ($choice -eq "0") {
+            Invoke-Cleanup
+            return
+        }
 
         $num = 0
         if (-not [int]::TryParse($choice, [ref]$num) -or -not $map.ContainsKey($num)) {
