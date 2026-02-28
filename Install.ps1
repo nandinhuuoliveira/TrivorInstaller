@@ -12,6 +12,9 @@ function Invoke-Cleanup {
     } catch {}
 }
 
+# --- Limpa resquicios de execucoes anteriores ---
+Invoke-Cleanup
+
 try {
 
     $BasePath    = $global:TrivorBasePath
