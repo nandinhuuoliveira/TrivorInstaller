@@ -180,6 +180,72 @@ function Install-Application {
         return
     }
 
+    # 3) Public URL EXE
+    if ($App.PSObject.Properties.Match("Install").Count -gt 0 -and $App.Install -and $App.Install.Method -eq "UrlExe") {
+
+        $cacheRoot = Join-Path $env:TEMP "TrivorInstaller\cache"
+        New-Item -ItemType Directory -Force -Path $cacheRoot | Out-Null
+
+        $cacheFileName = if ($App.Install.CacheFileName) { $App.Install.CacheFileName } else { [System.IO.Path]::GetFileName($App.Install.Url) }
+        $localFile = Join-Path $cacheRoot $cacheFileName
+
+        $hasHash = ($App.Install.PSObject.Properties.Match("Sha256").Count -gt 0 -and $App.Install.Sha256 -and $App.Install.Sha256 -ne "")
+
+        if ($hasHash) {
+            $expected = $App.Install.Sha256.ToUpper()
+
+            # Use cached file if hash matches
+            if (Test-Path $localFile) {
+                $current = Get-FileSha256 -Path $localFile
+                if ($current -and $current -eq $expected) {
+                    Write-Log "SHA256 OK (cached): $localFile" "INFO"
+                } else {
+                    Write-Log "SHA256 mismatch in cache. Re-downloading." "WARN"
+                    try { Remove-Item $localFile -Force -ErrorAction SilentlyContinue } catch {}
+                }
+            }
+
+            if (-not (Test-Path $localFile)) {
+                Write-Log "Downloading (UrlExe): $($App.Install.Url)" "INFO"
+                try {
+                    Invoke-WebRequest -Uri $App.Install.Url -OutFile $localFile -UseBasicParsing -ErrorAction Stop
+                } catch {
+                    Write-Log "Download failed: $($App.Install.Url)" "ERROR"
+                    return
+                }
+
+                $hash = Get-FileSha256 -Path $localFile
+                if (-not ($hash -and $hash -eq $expected)) {
+                    Write-Log "SHA256 mismatch after download. Aborting." "ERROR"
+                    try { Remove-Item $localFile -Force -ErrorAction SilentlyContinue } catch {}
+                    return
+                }
+                Write-Log "SHA256 OK: $localFile" "INFO"
+            }
+
+        } else {
+            # No hash — just download
+            Write-Log "Downloading (UrlExe, no hash): $($App.Install.Url)" "INFO"
+            try {
+                Invoke-WebRequest -Uri $App.Install.Url -OutFile $localFile -UseBasicParsing -ErrorAction Stop
+            } catch {
+                Write-Log "Download failed: $($App.Install.Url)" "ERROR"
+                return
+            }
+        }
+
+        Write-Log "Executing installer: $localFile" "INFO"
+        $installArgs = if ($App.Install.SilentArgs) { $App.Install.SilentArgs } else { "" }
+        Start-Process -FilePath $localFile -ArgumentList $installArgs -Wait -NoNewWindow
+
+        if ($App.Install.CleanAfterInstall -eq $true) {
+            try { Remove-Item $localFile -Force -ErrorAction SilentlyContinue } catch {}
+            Write-Log "Cache cleaned: $localFile" "INFO"
+        }
+
+        return
+    }
+
     Write-Log "No valid installation method for $($App.Name)" "ERROR"
 }
 #endregion
