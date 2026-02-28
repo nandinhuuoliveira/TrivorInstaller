@@ -45,14 +45,15 @@ function Show-ClientSubMenu {
 
         Write-Host "Cliente: $ClientName"
         Write-Host ""
-        Write-Host "1 - Modo automatico (instalar e atualizar tudo)"
+        Write-Host "1 - Modo automatico (instalar tudo)"
         Write-Host "2 - Modo manual (confirmar cada app)"
-        Write-Host "3 - Voltar ao menu principal"
+        Write-Host "3 - Update todos os programas (Winget)"
+        Write-Host "4 - Voltar ao menu principal"
         Write-Host ""
 
         $choice = Read-Host "Selecione uma opcao"
 
-        if ($choice -eq "3") { return }
+        if ($choice -eq "4") { return }
 
         $cfg = Get-ClientConfigByName -ClientName $ClientName
         if (-not $cfg) {
@@ -71,6 +72,14 @@ function Show-ClientSubMenu {
 
         if ($choice -eq "2") {
             Invoke-ClientManualInstall -ClientConfig $cfg
+            Write-Host ""
+            Write-Host "Concluido."
+            Wait-Enter
+            continue
+        }
+
+        if ($choice -eq "3") {
+            Invoke-ClientUpdateOnly -ClientConfig $cfg
             Write-Host ""
             Write-Host "Concluido."
             Wait-Enter
